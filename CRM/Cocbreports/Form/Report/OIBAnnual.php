@@ -9,10 +9,18 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
 
   protected $_summary = NULL;
 
-  protected $_customGroupExtends = array('Contact, Activity');
+  protected $_customGroupExtends = array('Activity');
   protected $_customGroupGroupBy = FALSE;
 
   public function __construct() {
+    $include = '';
+    if (!empty($accessAllowed)) {
+      $include = 'OR v.component_id IN (' . implode(', ', $accessAllowed) . ')';
+    }
+    $condition = " AND ( v.component_id IS NULL {$include} )";
+    $this->activityTypes = CRM_Core_OptionGroup::values('activity_type', FALSE, FALSE, FALSE, $condition);
+    asort($this->activityTypes);
+
     $this->_columns = array(
       'civicrm_contact' => array(
         'dao' => 'CRM_Contact_DAO_Contact',
@@ -31,16 +39,16 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
             'title' => E::ts('First Name'),
             'no_repeat' => TRUE,
           ),
-          'id' => array(
-            'no_display' => TRUE,
-            'required' => TRUE,
-          ),
           'last_name' => array(
             'title' => E::ts('Last Name'),
             'no_repeat' => TRUE,
           ),
-          'id' => array(
-            'no_display' => TRUE,
+          'gender_id' => array(
+            'title' => E::ts('Gender'),
+            'required' => TRUE,
+          ),
+          'birth_date' => array(
+            'title' => E::ts('Birth Date'),
             'required' => TRUE,
           ),
         ),
@@ -55,58 +63,6 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
         ),
         'grouping' => 'contact-fields',
       ),
-      /*'civicrm_membership' => array(
-        'dao' => 'CRM_Member_DAO_Membership',
-        'fields' => array(
-          'membership_type_id' => array(
-            'title' => 'Membership Type',
-            'required' => TRUE,
-            'no_repeat' => TRUE,
-          ),
-          'join_date' => array(
-            'title' => E::ts('Join Date'),
-            'default' => TRUE,
-          ),
-          'source' => array('title' => 'Source'),
-        ),
-        'filters' => array(
-          'join_date' => array(
-            'operatorType' => CRM_Report_Form::OP_DATE,
-          ),
-          'owner_membership_id' => array(
-            'title' => E::ts('Membership Owner ID'),
-            'operatorType' => CRM_Report_Form::OP_INT,
-          ),
-          'tid' => array(
-            'name' => 'membership_type_id',
-            'title' => E::ts('Membership Types'),
-            'type' => CRM_Utils_Type::T_INT,
-            'operatorType' => CRM_Report_Form::OP_MULTISELECT,
-            'options' => CRM_Member_PseudoConstant::membershipType(),
-          ),
-        ),
-        'grouping' => 'member-fields',
-      ),
-      'civicrm_membership_status' => array(
-        'dao' => 'CRM_Member_DAO_MembershipStatus',
-        'alias' => 'mem_status',
-        'fields' => array(
-          'name' => array(
-            'title' => E::ts('Status'),
-            'default' => TRUE,
-          ),
-        ),
-        'filters' => array(
-          'sid' => array(
-            'name' => 'id',
-            'title' => E::ts('Status'),
-            'type' => CRM_Utils_Type::T_INT,
-            'operatorType' => CRM_Report_Form::OP_MULTISELECT,
-            'options' => CRM_Member_PseudoConstant::membershipStatus(NULL, NULL, 'label'),
-          ),
-        ),
-        'grouping' => 'member-fields',
-      ),*/
       'civicrm_address' => array(
         'dao' => 'CRM_Core_DAO_Address',
         'fields' => array(
@@ -125,7 +81,7 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
       ),
       //add activity fields to filter on
       'civicrm_activity' => array(
-        'dao' => 'CRM_Core_DAO_Activity',
+        'dao' => 'CRM_Activity_DAO_Activity',
         'fields' => array(
           'activity_type_id' => [
             'title' => ts('Activity Type'),
@@ -164,6 +120,10 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
             'options' => CRM_Core_PseudoConstant::activityStatus(),
           ],
         ],
+        'civicrm_activity_contact' => [
+          'dao' => 'CRM_Activity_DAO_ActivityContact',
+          'fields' => [],
+        ],
       ),
     );
     $this->_groupFilter = TRUE;
@@ -183,9 +143,9 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
          FROM  civicrm_contact {$this->_aliases['civicrm_contact']} {$this->_aclFrom}
                LEFT JOIN civicrm_activity_contact {$this->_aliases['civicrm_activity_contact']}
                           ON {$this->_aliases['civicrm_contact']}.id =
-                             {$this->_aliases['civicrm_activity_contact']}.contact_id
+                             civicrm_activity_contact.contact_id
                LEFT JOIN civicrm_activity {$this->_aliases['civicrm_activity']}
-                          ON {$this->_aliases['civicrm_activity_contact']}.activity_id =
+                          ON civicrm_activity_contact.activity_id =
                              {$this->_aliases['civicrm_activity']}.id ";
 
     $this->joinAddressFromContact();
@@ -285,6 +245,139 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
         break;
       }
     }
+  }
+
+  /**
+   * @param $rows
+   *
+   * @return array
+   */
+  public function statistics(&$rows) {
+    $statistics = parent::statistics($rows);
+    /*$totalType = $totalActivity = $totalDuration = 0;
+    $query = "SELECT {$this->_tempTableName}.civicrm_activity_activity_type_id,
+        {$this->_tempTableName}.civicrm_activity_id_count,
+        {$this->_tempDurationSumTableName}.civicrm_activity_duration_total
+    FROM {$this->_tempTableName} INNER JOIN {$this->_tempDurationSumTableName}
+      ON ({$this->_tempTableName}.id = {$this->_tempDurationSumTableName}.id)";
+    $actDAO = CRM_Core_DAO::executeQuery($query);
+    $activityTypesCount = array();
+    while ($actDAO->fetch()) {
+      if (!in_array($actDAO->civicrm_activity_activity_type_id, $activityTypesCount)) {
+        $activityTypesCount[] = $actDAO->civicrm_activity_activity_type_id;
+      }
+      $totalActivity += $actDAO->civicrm_activity_id_count;
+      $totalDuration += $actDAO->civicrm_activity_duration_total;
+    }
+    $totalType = count($activityTypesCount);
+    $statistics['counts']['type'] = array(
+      'title' => ts('Total Types'),
+      'value' => $totalType,
+    );
+    $statistics['counts']['activities'] = array(
+      'title' => ts('Total Number of Activities'),
+      'value' => $totalActivity,
+    );
+    $statistics['counts']['duration'] = array(
+      'title' => ts('Total Duration (in Minutes)'),
+      'value' => $totalDuration,
+    );*/
+    //Get the Total Served
+    if ($statistics['counts']['rowsFound']['value']) {
+      $served = $statistics['counts']['rowsFound']['value'];
+    }
+    else {
+      $served = $statistics['counts']['rowCount']['value'];
+    }
+    $statistics['counts']['totalServed'] = array(
+      'title' => ts('Total Served'),
+      'value' => $served,
+    );
+    //Set some totals to fill
+    $age55to59 = $age60to64 = $age65to69 = $age70to74 = $age75to79 = $age80to84 = $age85to89 = $age90to94 = $age95to99 = $age100plus = $ageSubTotal = 0;
+    $male = $female = $otherGender = $refuseToSayGender = $genderSubTotal = 0;
+    //Get per-row addition totals
+    foreach ($rows as $row) {
+      //birth date
+      if ($row['civicrm_contact_birth_date']) {
+        $birthDate = CRM_Utils_Date::customFormat($row['civicrm_contact_birth_date'], '%Y%m%d');
+        if ($birthDate < date('Ymd')) {
+          $age = CRM_Utils_Date::calculateAge($birthDate);
+          $values['age']['y'] = CRM_Utils_Array::value('years', $age);
+          switch (TRUE) {
+            case in_array($values['age']['y'], range(55, 59)):
+              $age55to59++;
+              break;
+
+            case in_array($values['age']['y'], range(60, 64)):
+              $age60to64++;
+              break;
+
+            case in_array($values['age']['y'], range(65, 69)):
+              $age65to69++;
+              break;
+
+            case in_array($values['age']['y'], range(70, 74)):
+              $age70to74++;
+              break;
+
+            case in_array($values['age']['y'], range(75, 79)):
+              $age75to79++;
+              break;
+
+            case in_array($values['age']['y'], range(80, 84)):
+              $age80to84++;
+              break;
+
+            case in_array($values['age']['y'], range(85, 89)):
+              $age85to89++;
+              break;
+
+            case in_array($values['age']['y'], range(90, 94)):
+              $age90to94++;
+              break;
+
+            case in_array($values['age']['y'], range(95, 99)):
+              $age95to99++;
+              break;
+
+            case ($values['age']['y'] > 100):
+              $age100plus++;
+              break;
+
+            default:
+              break;
+          }
+          //add to the subtotal either way
+          $ageSubTotal++;
+        }
+      }
+      //gender id
+      if ($row['civicrm_contact_gender_id']) {
+        switch ($row['civicrm_contact_gender_id']) {
+          case 1:
+            $female++;
+            break;
+
+          case 2:
+            $male++;
+            break;
+
+          case 3:
+            $otherGender++;
+            break;
+
+          case 4:
+            $refuseToSayGender++;
+            break;
+
+          default:
+            break;
+        }
+        $genderSubTotal++;
+      }
+    }
+    return $statistics;
   }
 
 }
