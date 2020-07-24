@@ -9,6 +9,8 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
 
   protected $_summary = NULL;
 
+  protected $_dupes = 0;
+
   protected $_customGroupExtends = array('Activity');
   protected $_customGroupGroupBy = FALSE;
 
@@ -18,7 +20,7 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
       $include = 'OR v.component_id IN (' . implode(', ', $accessAllowed) . ')';
     }
     $condition = " AND ( v.component_id IS NULL {$include} )";
-    $this->activityTypes = CRM_Core_OptionGroup::values('activity_type', FALSE, FALSE, FALSE, $condition);
+    $this->activityTypes = CRM_Core_OptionGroup::values('activity_type', FALSE, FALSE, FALSE, NULL);
     asort($this->activityTypes);
 
     $this->_columns = array(
@@ -32,8 +34,9 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
             'no_repeat' => TRUE,
           ),
           'id' => array(
-            'no_display' => TRUE,
+            //'no_display' => TRUE,
             'required' => TRUE,
+            'no_repeat' => TRUE,
           ),
           'first_name' => array(
             'title' => E::ts('First Name'),
@@ -58,7 +61,8 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
             'operator' => 'like',
           ),
           'id' => array(
-            'no_display' => TRUE,
+            //'no_display' => TRUE,
+            'no_repeat' => TRUE,
           ),
         ),
         'grouping' => 'contact-fields',
@@ -122,7 +126,16 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
         ],
         'civicrm_activity_contact' => [
           'dao' => 'CRM_Activity_DAO_ActivityContact',
-          'fields' => [],
+          'fields' => [
+            'record_type_id' => [
+              'title' => ts('Record Type ID'),
+            ],
+          ],
+          'filters' => [
+            'record_type_id' => [
+              'title' => ts('Record Type ID'),
+            ],
+          ],
         ],
       ),
     );
@@ -140,16 +153,16 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
     $this->_from = NULL;
 
     $this->_from = "
-         FROM  civicrm_contact {$this->_aliases['civicrm_contact']} {$this->_aclFrom}
-               LEFT JOIN civicrm_activity_contact {$this->_aliases['civicrm_activity_contact']}
+         FROM civicrm_contact {$this->_aliases['civicrm_contact']} {$this->_aclFrom}
+               LEFT JOIN civicrm_activity_contact
                           ON {$this->_aliases['civicrm_contact']}.id =
                              civicrm_activity_contact.contact_id
                LEFT JOIN civicrm_activity {$this->_aliases['civicrm_activity']}
                           ON civicrm_activity_contact.activity_id =
                              {$this->_aliases['civicrm_activity']}.id ";
 
-    $this->joinAddressFromContact();
-    $this->joinEmailFromContact();
+    //$this->joinAddressFromContact();
+    //$this->joinEmailFromContact();
   }
 
   /**
@@ -187,9 +200,17 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
     // custom code to alter rows
     $entryFound = FALSE;
     $checkList = array();
+    $ids = [];
     foreach ($rows as $rowNum => $row) {
-
-      if (!empty($this->_noRepeats) && $this->_outputMode != 'csv') {
+      //count each contact only once who has an OIB Project Case Notes activity (there could be more than 1)
+      if (!in_array($row['civicrm_contact_id'], $ids)) {
+        $ids[] = $row['civicrm_contact_id'];
+      }
+      else {
+        unset($rows[$rowNum]);
+        $this->_dupes++;
+      }
+      /*if (!empty($this->_noRepeats) && $this->_outputMode != 'csv') {
         // not repeat contact display names if it matches with the one
         // in previous row
         $repeatFound = FALSE;
@@ -207,7 +228,7 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
         }
       }
 
-      /*if (array_key_exists('civicrm_membership_membership_type_id', $row)) {
+      if (array_key_exists('civicrm_membership_membership_type_id', $row)) {
         if ($value = $row['civicrm_membership_membership_type_id']) {
           $rows[$rowNum]['civicrm_membership_membership_type_id'] = CRM_Member_PseudoConstant::membershipType($value, FALSE);
         }
@@ -254,6 +275,8 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
    */
   public function statistics(&$rows) {
     $statistics = parent::statistics($rows);
+    //make sure total matches the duplicates we took away
+    $statistics['counts']['rowsFound']['value'] -= $this->_dupes;
     /*$totalType = $totalActivity = $totalDuration = 0;
     $query = "SELECT {$this->_tempTableName}.civicrm_activity_activity_type_id,
         {$this->_tempTableName}.civicrm_activity_id_count,
@@ -352,6 +375,50 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
           $ageSubTotal++;
         }
       }
+      $statistics['counts']['age55to59'] = array(
+        'title' => ts('Age 55 to 59'),
+        'value' => $age55to59,
+      );
+      $statistics['counts']['age60to64'] = array(
+        'title' => ts('Age 60 to 64'),
+        'value' => $age60to64,
+      );
+      $statistics['counts']['age65to69'] = array(
+        'title' => ts('Age 65 to 69'),
+        'value' => $age65to69,
+      );
+      $statistics['counts']['age70to74'] = array(
+        'title' => ts('Age 70 to 74'),
+        'value' => $age70to74,
+      );
+      $statistics['counts']['age75to79'] = array(
+        'title' => ts('Age 75 to 79'),
+        'value' => $age75to79,
+      );
+      $statistics['counts']['age80to84'] = array(
+        'title' => ts('Age 80 to 84'),
+        'value' => $age80to84,
+      );
+      $statistics['counts']['age85to89'] = array(
+        'title' => ts('Age 85 to 89'),
+        'value' => $age85to89,
+      );
+      $statistics['counts']['age90to94'] = array(
+        'title' => ts('Age 90 to 94'),
+        'value' => $age90to94,
+      );
+      $statistics['counts']['age95to99'] = array(
+        'title' => ts('Age 95 to 99'),
+        'value' => $age95to99,
+      );
+      $statistics['counts']['age100plus'] = array(
+        'title' => ts('Age 100 and Over'),
+        'value' => $age100plus,
+      );
+      $statistics['counts']['ageSubTotal'] = array(
+        'title' => ts('Total Served (Age)'),
+        'value' => $ageSubTotal,
+      );
       //gender id
       if ($row['civicrm_contact_gender_id']) {
         switch ($row['civicrm_contact_gender_id']) {
@@ -376,8 +443,39 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
         }
         $genderSubTotal++;
       }
+      $statistics['counts']['female'] = array(
+        'title' => ts('Female'),
+        'value' => $female,
+      );
+      $statistics['counts']['male'] = array(
+        'title' => ts('Male'),
+        'value' => $male,
+      );
+      $statistics['counts']['otherGender'] = array(
+        'title' => ts('Other Gender'),
+        'value' => $otherGender,
+      );
+      $statistics['counts']['refuseToSayGender'] = array(
+        'title' => ts('Refuse to Say Gender'),
+        'value' => $refuseToSayGender,
+      );
+      $statistics['counts']['genderSubTotal'] = array(
+        'title' => ts('Total Served (Gender)'),
+        'value' => $genderSubTotal,
+      );
     }
     return $statistics;
+  }
+
+  /**
+   * Generate where clause.
+   *
+   * @param bool|FALSE $durationMode
+   */
+  public function where($durationMode = FALSE) {
+    parent::where();
+    $this->_where .= "AND civicrm_activity_contact.record_type_id = 3";
+    $this->_where .= " AND {$this->_aliases['civicrm_contact']}.sort_name IS NOT NULL AND {$this->_aliases['civicrm_contact']}.sort_name != ''";
   }
 
 }
