@@ -210,30 +210,6 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
         unset($rows[$rowNum]);
         $this->_dupes++;
       }
-      /*if (!empty($this->_noRepeats) && $this->_outputMode != 'csv') {
-        // not repeat contact display names if it matches with the one
-        // in previous row
-        $repeatFound = FALSE;
-        foreach ($row as $colName => $colVal) {
-          if (CRM_Utils_Array::value($colName, $checkList) &&
-            is_array($checkList[$colName]) &&
-            in_array($colVal, $checkList[$colName])
-          ) {
-            $rows[$rowNum][$colName] = "";
-            $repeatFound = TRUE;
-          }
-          if (in_array($colName, $this->_noRepeats)) {
-            $checkList[$colName][] = $colVal;
-          }
-        }
-      }
-
-      if (array_key_exists('civicrm_membership_membership_type_id', $row)) {
-        if ($value = $row['civicrm_membership_membership_type_id']) {
-          $rows[$rowNum]['civicrm_membership_membership_type_id'] = CRM_Member_PseudoConstant::membershipType($value, FALSE);
-        }
-        $entryFound = TRUE;
-      }*/
 
       if (array_key_exists('civicrm_address_state_province_id', $row)) {
         if ($value = $row['civicrm_address_state_province_id']) {
@@ -277,45 +253,7 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
     $statistics = parent::statistics($rows);
     //make sure total matches the duplicates we took away
     $statistics['counts']['rowsFound']['value'] -= $this->_dupes;
-    /*$totalType = $totalActivity = $totalDuration = 0;
-    $query = "SELECT {$this->_tempTableName}.civicrm_activity_activity_type_id,
-        {$this->_tempTableName}.civicrm_activity_id_count,
-        {$this->_tempDurationSumTableName}.civicrm_activity_duration_total
-    FROM {$this->_tempTableName} INNER JOIN {$this->_tempDurationSumTableName}
-      ON ({$this->_tempTableName}.id = {$this->_tempDurationSumTableName}.id)";
-    $actDAO = CRM_Core_DAO::executeQuery($query);
-    $activityTypesCount = array();
-    while ($actDAO->fetch()) {
-      if (!in_array($actDAO->civicrm_activity_activity_type_id, $activityTypesCount)) {
-        $activityTypesCount[] = $actDAO->civicrm_activity_activity_type_id;
-      }
-      $totalActivity += $actDAO->civicrm_activity_id_count;
-      $totalDuration += $actDAO->civicrm_activity_duration_total;
-    }
-    $totalType = count($activityTypesCount);
-    $statistics['counts']['type'] = array(
-      'title' => ts('Total Types'),
-      'value' => $totalType,
-    );
-    $statistics['counts']['activities'] = array(
-      'title' => ts('Total Number of Activities'),
-      'value' => $totalActivity,
-    );
-    $statistics['counts']['duration'] = array(
-      'title' => ts('Total Duration (in Minutes)'),
-      'value' => $totalDuration,
-    );*/
-    //Get the Total Served
-    if ($statistics['counts']['rowsFound']['value']) {
-      $served = $statistics['counts']['rowsFound']['value'];
-    }
-    else {
-      $served = $statistics['counts']['rowCount']['value'];
-    }
-    $statistics['counts']['totalServed'] = array(
-      'title' => ts('Total Served'),
-      'value' => $served,
-    );
+    $previousFy = $notPreviousFy = 0;
     //Set some totals to fill
     $age55to59 = $age60to64 = $age65to69 = $age70to74 = $age75to79 = $age80to84 = $age85to89 = $age90to94 = $age95to99 = $age100plus = $ageSubTotal = 0;
     $male = $female = $otherGender = $refuseToSayGender = $genderSubTotal = 0;
@@ -327,6 +265,25 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
     $eyeProvider = $physician = $state = $government = $veterans = $seniorCenter = $assistedLivingRef = $nursingHomeRef = $faithBased = $independentLiving = $familyMember = $selfRef = $otherRef = $referralSubTotal = 0;
     //Get per-row addition totals
     foreach ($rows as $row) {
+      //subtotals for the top for last fiscal year and this fiscal year
+      if ($row['civicrm_contact_id']) {
+        $startDate = explode(' )', explode('value_case_notes_fo_30_civireport.date_of_service_206 >= ', $this->_where)[1])[0];
+        $endDate = explode(' )', explode('value_case_notes_fo_30_civireport.date_of_service_206 <= ', $this->_where)[1])[0];
+        $startDateMinusOneYear = date('Y-m-d', strtotime("-1 year", strtotime($startDate)));
+        $endDateMinusOneYear = date('Y-m-d', strtotime("-1 year", strtotime($endDate)));
+        $caseNotes = civicrm_api3('Activity', 'get', [
+          'sequential' => 1,
+          'target_contact_id' => $row['civicrm_contact_id'],
+          'activity_type_id' => "Case Notes Form",
+          'custom_206' => ['BETWEEN' => [$startDateMinusOneYear, $endDateMinusOneYear]],
+        ]);
+        if ($caseNotes['count'] > 0) {
+          $previousFy++;
+        }
+        else {
+          $notPreviousFy++;
+        }
+      }
       //birth date
       if ($row['civicrm_contact_birth_date']) {
         $birthDate = CRM_Utils_Date::customFormat($row['civicrm_contact_birth_date'], '%Y%m%d');
@@ -732,6 +689,31 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
         }
       }
     }
+    //totals
+    //Number of Individuals who began receiving services in previous FY and continued to receive services in the reported FY (with Intakes)
+    $statistics['counts']['previousFy'] = array(
+      'title' => ts('Individuals who began receiving services in previous FY and continued to receive services in the reported FY'),
+      'value' => $previousFy,
+    );
+
+    //Number of individuals who began receiving services in the reported FY
+    $statistics['counts']['notPreviousFy'] = array(
+      'title' => ts('Number of individuals who began receiving services in the reported FY'),
+      'value' => $notPreviousFy,
+    );
+
+    //Get the Total Served
+    if ($statistics['counts']['rowsFound']['value']) {
+      $served = $statistics['counts']['rowsFound']['value'];
+    }
+    else {
+      $served = $statistics['counts']['rowCount']['value'];
+    }
+    $statistics['counts']['totalServed'] = array(
+      'title' => ts('Total Served'),
+      'value' => $served,
+    );
+
     //add age stats
     $statistics['counts']['age55to59'] = array(
       'title' => ts('Age 55 to 59'),
@@ -798,6 +780,237 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
     $statistics['counts']['genderSubTotal'] = array(
       'title' => ts('Total Served (Gender)'),
       'value' => $genderSubTotal,
+    );
+
+    //senior intake activity-based stats
+    //race-ethnicity
+    //$whiteNonHispanic = $hispanicLatino = $blackAfricanAmerican = $asian = $americanIndianAlaskanNative = $nativeHawaiian = $otherRace = $twoOrMoreRaces = $unknownRace = $refuseToAnswerRace = $raceSubTotal = 0;
+    $statistics['counts']['whiteNonHispanic'] = array(
+      'title' => ts('White Non-Hispanic'),
+      'value' => $whiteNonHispanic,
+    );
+    $statistics['counts']['hispanicLatino'] = array(
+      'title' => ts('Hispanic/Latino'),
+      'value' => $hispanicLatino,
+    );
+    $statistics['counts']['blackAfricanAmerican'] = array(
+      'title' => ts('Black/African American'),
+      'value' => $blackAfricanAmerican,
+    );
+    $statistics['counts']['asian'] = array(
+      'title' => ts('Asian'),
+      'value' => $asian,
+    );
+    $statistics['counts']['americanIndianAlaskanNative'] = array(
+      'title' => ts('American Indian / Alaskan Native'),
+      'value' => $americanIndianAlaskanNative,
+    );
+    $statistics['counts']['nativeHawaiian'] = array(
+      'title' => ts('Native Hawaiian or Pacific Islander'),
+      'value' => $nativeHawaiian,
+    );
+    $statistics['counts']['otherRace'] = array(
+      'title' => ts('Other Race'),
+      'value' => $otherRace,
+    );
+    $statistics['counts']['twoOrMoreRaces'] = array(
+      'title' => ts('Two or More Races'),
+      'value' => $twoOrMoreRaces,
+    );
+    $statistics['counts']['unknownRace'] = array(
+      'title' => ts('Unknown Race'),
+      'value' => $unknownRace,
+    );
+    $statistics['counts']['refuseToAnswerRace'] = array(
+      'title' => ts('Refuse to Answer Race'),
+      'value' => $refuseToAnswerRace,
+    );
+    $statistics['counts']['raceSubTotal'] = array(
+      'title' => ts('Total Served (Race)'),
+      'value' => $raceSubTotal,
+    );
+
+    //degree of visual impairment
+    //$totallyBlind = $legallyBlind = $severeVisualImpairment = $blindSubTotal = 0;
+    $statistics['counts']['totallyBlind'] = array(
+      'title' => ts('Totally Blind'),
+      'value' => $totallyBlind,
+    );
+    $statistics['counts']['legallyBlind'] = array(
+      'title' => ts('Legally Blind'),
+      'value' => $legallyBlind,
+    );
+    $statistics['counts']['severeVisualImpairment'] = array(
+      'title' => ts('Severe Visual Impairment'),
+      'value' => $severeVisualImpairment,
+    );
+    $statistics['counts']['blindSubTotal'] = array(
+      'title' => ts('Total Served (Blindness)'),
+      'value' => $blindSubTotal,
+    );
+
+    //major cause of visual impairment
+    //$macularDegeneration = $diabeticRetinopathy = $glaucoma = $cataracts = $otherCause = $causeSubTotal = 0;
+    $statistics['counts']['macularDegeneration'] = array(
+      'title' => ts('Macular Degeneration'),
+      'value' => $macularDegeneration,
+    );
+    $statistics['counts']['diabeticRetinopathy'] = array(
+      'title' => ts('Diabetic Retinopathy'),
+      'value' => $diabeticRetinopathy,
+    );
+    $statistics['counts']['glaucoma'] = array(
+      'title' => ts('Glaucoma'),
+      'value' => $glaucoma,
+    );
+    $statistics['counts']['cataracts'] = array(
+      'title' => ts('Cataracts'),
+      'value' => $cataracts,
+    );
+    $statistics['counts']['otherCause'] = array(
+      'title' => ts('Other Cause'),
+      'value' => $otherCause,
+    );
+    $statistics['counts']['causeSubTotal'] = array(
+      'title' => ts('Total Served (Cause)'),
+      'value' => $causeSubTotal,
+    );
+
+    //other age-related impairments
+    //$hearingImpairment = $communicationImpairment = $diabetes = $cardiovascular = $cancer = $movementDisorders = $mobilityImpairment = $alzheimers = $cognitiveImpairment = $depression = $mentalHealthImpairment = $otherConcerns = 0;
+    $statistics['counts']['hearingImpairment'] = array(
+      'title' => ts('Hearing Impairment'),
+      'value' => $hearingImpairment,
+    );
+    $statistics['counts']['communicationImpairment'] = array(
+      'title' => ts('Communication Impairment'),
+      'value' => $communicationImpairment,
+    );
+    $statistics['counts']['diabetes'] = array(
+      'title' => ts('Diabetes'),
+      'value' => $diabetes,
+    );
+    $statistics['counts']['cardiovascular'] = array(
+      'title' => ts('Cardiovascular Disease & Strokes'),
+      'value' => $cardiovascular,
+    );
+    $statistics['counts']['cancer'] = array(
+      'title' => ts('Cancer'),
+      'value' => $cancer,
+    );
+    $statistics['counts']['movementDisorders'] = array(
+      'title' => ts('Bone, Muscle, Skin, Joint, Movement Disorders'),
+      'value' => $movementDisorders,
+    );
+    $statistics['counts']['mobilityImpairment'] = array(
+      'title' => ts('Mobility Impairment'),
+      'value' => $mobilityImpairment,
+    );
+    $statistics['counts']['alzheimers'] = array(
+      'title' => ts('Alzheimer\'s Disease/Cognitive Impairment'),
+      'value' => $alzheimers,
+    );
+    $statistics['counts']['cognitiveImpairment'] = array(
+      'title' => ts('Cognitive or Intellectual Impairment'),
+      'value' => $cognitiveImpairment,
+    );
+    $statistics['counts']['depression'] = array(
+      'title' => ts('Depression/Mood Disorders'),
+      'value' => $depression,
+    );
+    $statistics['counts']['mentalHealthImpairment'] = array(
+      'title' => ts('Mental Health Impairment'),
+      'value' => $mentalHealthImpairment,
+    );
+    $statistics['counts']['otherConcerns'] = array(
+      'title' => ts('Other Concerns'),
+      'value' => $otherConcerns,
+    );
+
+    //type of residence
+    //$private = $seniorLiving = $assisted = $nursingHome = $homeless = $residenceSubTotal = 0;
+    $statistics['counts']['private'] = array(
+      'title' => ts('Private Residence'),
+      'value' => $private,
+    );
+    $statistics['counts']['seniorLiving'] = array(
+      'title' => ts('Senior Living/Retirement Community'),
+      'value' => $seniorLiving,
+    );
+    $statistics['counts']['assisted'] = array(
+      'title' => ts('Assisted Living Facility'),
+      'value' => $assisted,
+    );
+    $statistics['counts']['nursingHome'] = array(
+      'title' => ts('Nursing Home/Long Term Care Facility'),
+      'value' => $nursingHome,
+    );
+    $statistics['counts']['homeless'] = array(
+      'title' => ts('Homeless'),
+      'value' => $homeless,
+    );
+    $statistics['counts']['residenceSubTotal'] = array(
+      'title' => ts('Total Served (Residence)'),
+      'value' => $residenceSubTotal,
+    );
+
+    //source of referral
+    //$eyeProvider = $physician = $state = $government = $veterans = $seniorCenter = $assistedLivingRef = $nursingHomeRef = $faithBased = $independentLiving = $familyMember = $selfRef = $otherRef = $referralSubTotal = 0;
+    $statistics['counts']['eyeProvider'] = array(
+      'title' => ts('Eye Care Provider (Ophthalmologist, Optometrist)'),
+      'value' => $eyeProvider,
+    );
+    $statistics['counts']['physician'] = array(
+      'title' => ts('Physician/Medical Provider'),
+      'value' => $physician,
+    );
+    $statistics['counts']['state'] = array(
+      'title' => ts('State VR Agency'),
+      'value' => $state,
+    );
+    $statistics['counts']['government'] = array(
+      'title' => ts('Government or Social Service Agency'),
+      'value' => $government,
+    );
+    $statistics['counts']['veterans'] = array(
+      'title' => ts('Veterans Administration'),
+      'value' => $veterans,
+    );
+    $statistics['counts']['seniorCenter'] = array(
+      'title' => ts('Senior Center'),
+      'value' => $seniorCenter,
+    );
+    $statistics['counts']['assistedLivingRef'] = array(
+      'title' => ts('Assisted Living Facility'),
+      'value' => $assistedLivingRef,
+    );
+    $statistics['counts']['nursingHomeRef'] = array(
+      'title' => ts('Nursing Home/Long Term Care Facility'),
+      'value' => $nursingHomeRef,
+    );
+    $statistics['counts']['faithBased'] = array(
+      'title' => ts('Faith Based Organization'),
+      'value' => $faithBased,
+    );
+    $statistics['counts']['independentLiving'] = array(
+      'title' => ts('Independent Living Center'),
+      'value' => $independentLiving,
+    );
+    $statistics['counts']['familyMember'] = array(
+      'title' => ts('Family Member or Friend'),
+      'value' => $familyMember,
+    );
+    $statistics['counts']['selfRef'] = array(
+      'title' => ts('Self Referral'),
+      'value' => $selfRef,
+    );
+    $statistics['counts']['otherRef'] = array(
+      'title' => ts('Other Referral'),
+      'value' => $otherRef,
+    );
+    $statistics['counts']['referralSubTotal'] = array(
+      'title' => ts('Total Served (Referral)'),
+      'value' => $referralSubTotal,
     );
 
     return $statistics;
