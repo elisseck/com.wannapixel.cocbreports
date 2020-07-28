@@ -263,6 +263,16 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
     $hearingImpairment = $communicationImpairment = $diabetes = $cardiovascular = $cancer = $movementDisorders = $mobilityImpairment = $alzheimers = $cognitiveImpairment = $depression = $mentalHealthImpairment = $otherConcerns = $otherImpairmentsSubTotal = 0;
     $private = $seniorLiving = $assisted = $nursingHome = $homeless = $residenceSubTotal = 0;
     $eyeProvider = $physician = $state = $government = $veterans = $seniorCenter = $assistedLivingRef = $nursingHomeRef = $faithBased = $independentLiving = $familyMember = $selfRef = $otherRef = $referralSubTotal = 0;
+
+    //case notes fields
+    $provisionAssistiveDevices = $provisionAssistiveTech = $orientationAndMobilityTraining = $communicationSkills = $mobilitySkills = $dailyLivingSkills = $supportiveServices = $advocacyTraining = $counseling = $communityIntegration = $otherILServices = 0;
+
+    //performance metrics fields
+    $receivingAtServices = $atServicesAndImproved = $atServicesNotDetermined = $oAndMTraining = $oAndMImproved = $oAndMNotDetermined = $commsTraining = $commsTrainingImproved = $commsTrainingNotDetermined = $dailyLivingTraining = $dailyLivingTrainingImproved = $dailyLivingTrainingNotDetermined = 0;
+
+    //case closure fields
+    $greaterConfidence = $lessConfidence = $noChange = $unrelatedChange = $died = $totalCaseClosures = $totalCaseClosuresWithImprovement = 0;
+
     //Get per-row addition totals
     foreach ($rows as $row) {
       //subtotals for the top for last fiscal year and this fiscal year
@@ -688,6 +698,198 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
           $referralSubTotal++;
         }
       }
+
+      if ($row['civicrm_contact_id']) {
+        $allCaseNotes = civicrm_api3('Activity', 'get', [
+          'sequential' => 1,
+          'target_contact_id' => $row['civicrm_contact_id'],
+          'activity_type_id' => "Case Notes Form",
+          'custom_206' => ['BETWEEN' => [$startDate, $endDate]],
+        ]);
+
+        //case notes fields
+        //$provisionAssistiveDevices = $provisionAssistiveTech = $orientationAndMobilityTraining = $communicationSkills = $mobilitySkills = $dailyLivingSkills = $supportiveServices = $advocacyTraining = $counseling = $communityIntegration = $otherILServices = 0;
+
+        //performance metrics from case notes
+        //$receivingAtServices = $atServicesAndImproved = $atServicesNotDetermined = $oAndMTraining = $oAndMImproved = $oAndMNotDetermined = $commsTraining = $commsTrainingImproved = $commsTrainingNotDetermined = $dailyLivingTraining = $dailyLivingTrainingImproved = $dailyLivingTrainingNotDetermined = 0;
+        //set up some counts to keep track if this contact was counted at all or not so we don't double up
+        //these may be useful later if they wanted to add totals
+        $receivingAtServicesCount = $atServicesAndImprovedCount = $oAndMTrainingCount = $oAndMImprovedCount = $commsTrainingCount = $commsTrainingImprovedCount = $dailyLivingTrainingCount = $dailyLivingTrainingImprovedCount = 0;
+        $provisionAssistiveTechCount = $orientationAndMobilityTrainingCount = $communicationSkillsCount = $dailyLivingSkillsCount = $supportiveServicesCount = $advocacyTrainingCount = $counselingCount = $communityIntegrationCount = $otherILServicesCount = 0;
+        foreach ($allCaseNotes['values'] as $case) {
+          //this one row is unduplicated, so we don't need to count first here
+          if (in_array('Provision of Assistive Technology Devices and Aids', $case['custom_216'])) {
+            $provisionAssistiveDevices++;
+          }
+          if (in_array('Assistive Technology Services', $case['custom_216'])) {
+            $provisionAssistiveTechCount++;
+          }
+          if (in_array('Supportive Services (reader services, transportation, personal)', $case['custom_216'])) {
+            $supportiveServicesCount++;
+          }
+          if (in_array('Advocacy Training & Support Networks', $case['custom_216'])) {
+            $advocacyTrainingCount++;
+          }
+          if (in_array('Counseling (peer, individual, group)', $case['custom_216'])) {
+            $counselingCount++;
+          }
+          if (in_array('Information, Referral and Community Integration', $case['custom_216'])) {
+            $communityIntegrationCount++;
+          }
+          if (in_array('Other IL Services', $case['custom_216'])) {
+            $otherILServicesCount++;
+          }
+          if ($case['custom_214'] == 2 || $case['custom_214'] == 3 || $case['custom_214'] == 6 || $case['custom_214'] == 7) {
+            if (in_array('Provision of Assistive Technology Devices and Aids', $case['custom_216']) || in_array('Assistive Technology Services', $case['custom_216'])) {
+              $receivingAtServicesCount++;
+            }
+          }
+          if (in_array('Participant receiving Technology Services demonstrated improvement in abilities', $case['custom_216'])) {
+            $atServicesAndImprovedCount++;
+          }
+          if (in_array('O&M Training', $case['custom_216'])) {
+            $oAndMTrainingCount++;
+            //some items on this report were duplicate requests
+            $orientationAndMobilityTrainingCount++;
+          }
+          if (in_array('Participant receiving O&M services demonstrated improvement in abilities', $case['custom_216'])) {
+            $oAndMImprovedCount++;
+          }
+          if (in_array('Communication Skills', $case['custom_216'])) {
+            $commsTrainingCount++;
+            $communicationSkillsCount++;
+          }
+          if (in_array('Participant receiving CommunicationTraining demonstrated improvement in abilities', $case['custom_216'])) {
+            $commsTrainingImprovedCount++;
+          }
+          if (in_array('Daily Living Skills', $case['custom_216'])) {
+            $dailyLivingTrainingCount++;
+            $dailyLivingSkillsCount++;
+          }
+          if (in_array('Participant receiving Daily Living services demonstrated improvement in abilities', $case['custom_216'])) {
+            $dailyLivingTrainingImprovedCount++;
+          }
+        }
+        //tally up the 'one per contact' case notes including 'functional gains not determined'
+        //$provisionAssistiveTechCount = $orientationAndMobilityTrainingCount = $communicationSkillsCount = $dailyLivingSkillsCount = $supportiveServicesCount = $advocacyTrainingCount = $counselingCount = $communityIntegrationCount = $otherILServicesCount = 0;
+        if ($provisionAssistiveTechCount > 0) {
+          $provisionAssistiveTech++;
+        }
+        if ($orientationAndMobilityTrainingCount > 0) {
+          $orientationAndMobilityTraining++;
+        }
+        if ($communicationSkillsCount > 0) {
+          $communicationSkills++;
+        }
+        if ($dailyLivingSkillsCount > 0) {
+          $dailyLivingSkills++;
+        }
+        if ($supportiveServicesCount > 0) {
+          $supportiveServices++;
+        }
+        if ($advocacyTrainingCount > 0) {
+          $advocacyTraining++;
+        }
+        if ($counselingCount > 0) {
+          $counseling++;
+        }
+        if ($communityIntegrationCount > 0) {
+          $communityIntegration++;
+        }
+        if ($otherILServicesCount > 0) {
+          $otherILServices++;
+        }
+        //$receivingAtServices = $atServicesAndImproved = $atServicesNotDetermined = $oAndMTraining = $oAndMImproved = $oAndMNotDetermined = $commsTraining = $commsTrainingImproved = $commsTrainingNotDetermined = $dailyLivingTraining = $dailyLivingTrainingImproved = $dailyLivingTrainingNotDetermined = 0;
+        if ($receivingAtServicesCount > 0) {
+          $receivingAtServices++;
+        }
+        //If improved, add here, otherwise results were not determined
+        if ($atServicesAndImprovedCount > 0) {
+          $atServicesAndImproved++;
+        }
+        else {
+          $atServicesNotDetermined++;
+        }
+
+        if ($oAndMTrainingCount > 0) {
+          $oAndMTraining++;
+        }
+        if ($oAndMImprovedCount > 0) {
+          $oAndMImproved++;
+        }
+        else {
+          $oAndMNotDetermined++;
+        }
+
+        if ($commsTrainingCount > 0) {
+          $commsTraining++;
+        }
+        if ($commsTrainingImprovedCount > 0) {
+          $commsTrainingImproved++;
+        }
+        else {
+          $commsTrainingNotDetermined++;
+        }
+
+        if ($dailyLivingTrainingCount > 0) {
+          $dailyLivingTraining++;
+        }
+        if ($dailyLivingTrainingImprovedCount > 0) {
+          $dailyLivingTrainingImproved++;
+        }
+        else {
+          $dailyLivingTrainingNotDetermined++;
+        }
+
+        //case closure fields
+        $caseClosure = civicrm_api3('Activity', 'get', [
+          'sequential' => 1,
+          'target_contact_id' => $row['civicrm_contact_id'],
+          'activity_type_id' => "Case Closure Form",
+          'custom_206' => ['BETWEEN' => [$startDate, $endDate]],
+        ]);
+        if ($caseClosure['count'] > 0) {
+          $totalCaseClosures++;
+        }
+        //there should only be one as noted in spec but we're still careful here
+        foreach ($caseClosure['values'] as $closure) {
+          //case closure fields
+          //$greaterConfidence = $lessConfidence = $noChange = $unrelatedChange = $died = $totalCaseClosures = $totalCaseClosuresWithImprovement = 0;
+          switch ($closure['custom_222']) {
+            case 'Greater Control or Confidence':
+              $greaterConfidence++;
+              break;
+
+            case 'Less Control':
+              $lessConfidence++;
+              break;
+
+            case 'No Change':
+              $noChange++;
+              break;
+
+            default:
+              break;
+          }
+
+          switch ($closure['custom_223']) {
+            case 1:
+              $unrelatedChange++;
+              break;
+
+            case 2:
+              $died++;
+              break;
+
+            default:
+              break;
+          }
+
+          if (in_array('Participant believes they now can live more independently due to services received', $closure['custom_221']) || in_array('Participant believes they can maintain their current living situation', $closure['custom_221'])) {
+            $totalCaseClosuresWithImprovement++;
+          }
+        }
+      }
     }
     //totals
     //Number of Individuals who began receiving services in previous FY and continued to receive services in the reported FY (with Intakes)
@@ -1011,6 +1213,131 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
     $statistics['counts']['referralSubTotal'] = array(
       'title' => ts('Total Served (Referral)'),
       'value' => $referralSubTotal,
+    );
+
+    //case notes fields
+    //$provisionAssistiveDevices = $provisionAssistiveTech = $orientationAndMobilityTraining = $communicationSkills = $dailyLivingSkills = $supportiveServices = $advocacyTraining = $counseling = $communityIntegration = $otherILServices = 0;
+    $statistics['counts']['provisionAssistiveDevices'] = array(
+      'title' => ts('Provision of Assistive Technology devices and aids'),
+      'value' => $provisionAssistiveDevices,
+    );
+    $statistics['counts']['provisionAssistiveTech'] = array(
+      'title' => ts('Provision of Assistive Technology training'),
+      'value' => $provisionAssistiveTech,
+    );
+    $statistics['counts']['orientationAndMobilityTraining'] = array(
+      'title' => ts('Orientation and Mobility Training'),
+      'value' => $orientationAndMobilityTraining,
+    );
+    $statistics['counts']['communicationSkills'] = array(
+      'title' => ts('Communication Skills'),
+      'value' => $communicationSkills,
+    );
+    $statistics['counts']['dailyLivingSkills'] = array(
+      'title' => ts('Daily Living Skills'),
+      'value' => $dailyLivingSkills,
+    );
+    $statistics['counts']['supportiveServices'] = array(
+      'title' => ts('Supportive Services'),
+      'value' => $supportiveServices,
+    );
+    $statistics['counts']['advocacyTraining'] = array(
+      'title' => ts('Advocacy training and support networks'),
+      'value' => $advocacyTraining,
+    );
+    $statistics['counts']['counseling'] = array(
+      'title' => ts('Counceling'),
+      'value' => $counseling,
+    );
+    $statistics['counts']['communityIntegration'] = array(
+      'title' => ts('Information, referral and community integration'),
+      'value' => $communityIntegration,
+    );
+    $statistics['counts']['otherILServices'] = array(
+      'title' => ts('Other IL services'),
+      'value' => $otherILServices,
+    );
+
+    //performance metrics
+    //$receivingAtServices = $atServicesAndImproved = $atServicesNotDetermined = $oAndMTraining = $oAndMImproved = $oAndMNotDetermined = $commsTraining = $commsTrainingImproved = $commsTrainingNotDetermined = $dailyLivingTraining = $dailyLivingTrainingImproved = $dailyLivingTrainingNotDetermined = 0;
+    $statistics['counts']['receivingAtServices'] = array(
+      'title' => ts('Number of Individuals Receiving AT Services'),
+      'value' => $receivingAtServices,
+    );
+    $statistics['counts']['atServicesAndImproved'] = array(
+      'title' => ts('Number of Individuals receiving Assistive Technology training who maintained or improved functional abilities that were previously lost or diminished as a result of vision loss'),
+      'value' => $atServicesAndImproved,
+    );
+    $statistics['counts']['atServicesNotDetermined'] = array(
+      'title' => ts('Functional Gains Not Determined (AT Services)'),
+      'value' => $atServicesNotDetermined,
+    );
+    $statistics['counts']['oAndMTraining'] = array(
+      'title' => ts('O&M Training'),
+      'value' => $oAndMTraining,
+    );
+    $statistics['counts']['oAndMImproved'] = array(
+      'title' => ts('Of those receiving Orientation and Mobility services, the number of individuals who experienced functional gains or maintained their ability to travel safely and independently in their residence and/or community environment as a result of services.'),
+      'value' => $oAndMImproved,
+    );
+    $statistics['counts']['oAndMNotDetermined'] = array(
+      'title' => ts('Functional Gains Not Determined (O&M)'),
+      'value' => $oAndMNotDetermined,
+    );
+    $statistics['counts']['commsTraining'] = array(
+      'title' => ts('Communications'),
+      'value' => $commsTraining,
+    );
+    $statistics['counts']['commsTrainingImproved'] = array(
+      'title' => ts('Of those receiving Communication Skills training, the number of individuals who gained or maintained their functional abilities as a result of services they received.'),
+      'value' => $commsTrainingImproved,
+    );
+    $statistics['counts']['commsTrainingNotDetermined'] = array(
+      'title' => ts('Functional Gains Not Determined (Communications)'),
+      'value' => $commsTrainingNotDetermined,
+    );
+    $statistics['counts']['dailyLivingTraining'] = array(
+      'title' => ts('Daily Living'),
+      'value' => $dailyLivingTraining,
+    );
+    $statistics['counts']['dailyLivingTrainingImproved'] = array(
+      'title' => ts('Number of Individuals that experienced functional gains or successfully restored or maintained their functional ability to engage in their customary daily life activities as a result of services or training in personal management and daily living skills.'),
+      'value' => $dailyLivingTrainingImproved,
+    );
+    $statistics['counts']['dailyLivingTrainingNotDetermined'] = array(
+      'title' => ts('Functional Gains Not Determined (Daily Living)'),
+      'value' => $dailyLivingTrainingNotDetermined,
+    );
+
+    //case closure fields
+    //$greaterConfidence = $lessConfidence = $noChange = $unrelatedChange = $died = $totalCaseClosures = $totalCaseClosuresWithImprovement = 0;
+    $statistics['counts']['greaterConfidence'] = array(
+      'title' => ts('Greater Confidence/Control'),
+      'value' => $greaterConfidence,
+    );
+    $statistics['counts']['lessConfidence'] = array(
+      'title' => ts('Less Confidence/Control'),
+      'value' => $lessConfidence,
+    );
+    $statistics['counts']['noChange'] = array(
+      'title' => ts('No Change'),
+      'value' => $noChange,
+    );
+    $statistics['counts']['unrelatedChange'] = array(
+      'title' => ts('Unrelated Change'),
+      'value' => $unrelatedChange,
+    );
+    $statistics['counts']['died'] = array(
+      'title' => ts('Died'),
+      'value' => $died,
+    );
+    $statistics['counts']['totalCaseClosures'] = array(
+      'title' => ts('Total number of individuals who have a Case Closure'),
+      'value' => $totalCaseClosures,
+    );
+    $statistics['counts']['totalCaseClosuresWithImprovement'] = array(
+      'title' => ts('Total number of individuals who have a Case Closure, that report increased ability to engage in daily life activities'),
+      'value' => $totalCaseClosuresWithImprovement,
     );
 
     return $statistics;
