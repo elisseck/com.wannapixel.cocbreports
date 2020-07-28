@@ -846,7 +846,7 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
           'sequential' => 1,
           'target_contact_id' => $row['civicrm_contact_id'],
           'activity_type_id' => "Case Closure Form",
-          'custom_206' => ['BETWEEN' => [$startDate, $endDate]],
+          'custom_219' => ['BETWEEN' => [$startDate, $endDate]],
         ]);
         if ($caseClosure['count'] > 0) {
           $totalCaseClosures++;
