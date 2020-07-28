@@ -373,8 +373,8 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
         ]);
         //race-ethnicity
         //$whiteNonHispanic = $hispanicLatino = $blackAfricanAmerican = $asian = $americanIndianAlaskanNative = $nativeHawaiian = $otherRace = $twoOrMoreRaces = $unknownRace = $refuseToAnswerRace = $raceSubTotal = 0;
-        if ($result[0]['values']['custom_159']) {
-          switch ($result[0]['values']['custom_159']) {
+        if ($result['values'][0]['custom_159']) {
+          switch ($result['values'][0]['custom_159']) {
             case 1:
               $whiteNonHispanic++;
               break;
@@ -424,8 +424,8 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
         }
         //degree of visual impairment
         //$totallyBlind = $legallyBlind = $severeVisualImpairment = $blindSubTotal = 0;
-        if ($result[0]['values']['custom_171']) {
-          switch ($result[0]['values']['custom_171']) {
+        if ($result['values'][0]['custom_171']) {
+          switch ($result['values'][0]['custom_171']) {
             case 1:
               $totallyBlind++;
               break;
@@ -447,8 +447,8 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
 
         //major cause of visual impairment
         //$macularDegeneration = $diabeticRetinopathy = $glaucoma = $cataracts = $otherCause = $causeSubTotal = 0;
-        if ($result[0]['values']['custom_172']) {
-          switch ($result[0]['values']['custom_172']) {
+        if ($result['values'][0]['custom_172']) {
+          switch ($result['values'][0]['custom_172']) {
             case 1:
               $macularDegeneration++;
               break;
@@ -506,7 +506,7 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
 
         //other age-related impairments
         //$hearingImpairment = $communicationImpairment = $diabetes = $cardiovascular = $cancer = $movementDisorders = $mobilityImpairment = $alzheimers = $cognitiveImpairment = $depression = $mentalHealthImpairment = $otherConcerns;
-        if ($result[0]['values']['custom_175']) {
+        if ($result['values'][0]['custom_175']) {
           switch (TRUE) {
             case in_array('Hearing Impairment', $result[0]['values']['custom_175']):
               $hearingImpairment++;
@@ -564,8 +564,8 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
 
         //type of residence
         //$private = $seniorLiving = $assisted = $nursingHome = $homeless = $residenceSubTotal = 0;
-        if ($result[0]['values']['custom_165']) {
-          switch ($result[0]['values']['custom_165']) {
+        if ($result['values'][0]['custom_165']) {
+          switch ($result['values'][0]['custom_165']) {
             case 1:
               $private++;
               break;
@@ -595,8 +595,8 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
 
         //source of referral
         //$eyeProvider = $physician = $state = $government = $veterans = $seniorCenter = $assistedLivingRef = $nursingHomeRef = $faithBased = $independentLiving = $familyMember = $selfRef = $otherRef = $referralSubTotal = 0;
-        if ($result[0]['values']['custom_172']) {
-          switch ($result[0]['values']['custom_172']) {
+        if ($result['values'][0]['custom_172']) {
+          switch ($result['values'][0]['custom_172']) {
             case 1:
               $eyeProvider++;
               break;
