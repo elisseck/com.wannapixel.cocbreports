@@ -804,43 +804,43 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
         //$receivingAtServices = $atServicesAndImproved = $atServicesNotDetermined = $oAndMTraining = $oAndMImproved = $oAndMNotDetermined = $commsTraining = $commsTrainingImproved = $commsTrainingNotDetermined = $dailyLivingTraining = $dailyLivingTrainingImproved = $dailyLivingTrainingNotDetermined = 0;
         if ($receivingAtServicesCount > 0) {
           $receivingAtServices++;
-        }
-        //If improved, add here, otherwise results were not determined
-        if ($atServicesAndImprovedCount > 0) {
-          $atServicesAndImproved++;
-        }
-        else {
-          $atServicesNotDetermined++;
+          //If improved, add here, otherwise results were not determined
+          if ($atServicesAndImprovedCount > 0) {
+            $atServicesAndImproved++;
+          }
+          else {
+            $atServicesNotDetermined++;
+          }
         }
 
         if ($oAndMTrainingCount > 0) {
           $oAndMTraining++;
-        }
-        if ($oAndMImprovedCount > 0) {
-          $oAndMImproved++;
-        }
-        else {
-          $oAndMNotDetermined++;
+          if ($oAndMImprovedCount > 0) {
+            $oAndMImproved++;
+          }
+          else {
+            $oAndMNotDetermined++;
+          }
         }
 
         if ($commsTrainingCount > 0) {
           $commsTraining++;
-        }
-        if ($commsTrainingImprovedCount > 0) {
-          $commsTrainingImproved++;
-        }
-        else {
-          $commsTrainingNotDetermined++;
+          if ($commsTrainingImprovedCount > 0) {
+            $commsTrainingImproved++;
+          }
+          else {
+            $commsTrainingNotDetermined++;
+          }
         }
 
         if ($dailyLivingTrainingCount > 0) {
           $dailyLivingTraining++;
-        }
-        if ($dailyLivingTrainingImprovedCount > 0) {
-          $dailyLivingTrainingImproved++;
-        }
-        else {
-          $dailyLivingTrainingNotDetermined++;
+          if ($dailyLivingTrainingImprovedCount > 0) {
+            $dailyLivingTrainingImproved++;
+          }
+          else {
+            $dailyLivingTrainingNotDetermined++;
+          }
         }
 
         //case closure fields
