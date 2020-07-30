@@ -741,11 +741,12 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
           if (in_array('Other IL Services', $case['custom_216'])) {
             $otherILServicesCount++;
           }
-          if ($case['custom_214'] == 2 || $case['custom_214'] == 3 || $case['custom_214'] == 6 || $case['custom_214'] == 7) {
-            if (in_array('Provision of Assistive Technology Devices and Aids', $case['custom_216']) || in_array('Assistive Technology Services', $case['custom_216'])) {
-              $receivingAtServicesCount++;
-            }
+          //decision was made to remove the event filter from this, which is commented out here
+          //if ($case['custom_214'] == 2 || $case['custom_214'] == 3 || $case['custom_214'] == 6 || $case['custom_214'] == 7) {
+          if (in_array('Provision of Assistive Technology Devices and Aids', $case['custom_216']) || in_array('Assistive Technology Services', $case['custom_216'])) {
+            $receivingAtServicesCount++;
           }
+          //}
           if (in_array('Participant receiving Technology Services demonstrated improvement in abilities', $case['custom_216'])) {
             $atServicesAndImprovedCount++;
           }
