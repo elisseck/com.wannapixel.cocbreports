@@ -908,10 +908,10 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
 
     //Get the Total Served
     if ($statistics['counts']['rowsFound']['value']) {
-      $served = $statistics['counts']['rowsFound']['value'];
+      $served = abs($statistics['counts']['rowsFound']['value']);
     }
     else {
-      $served = $statistics['counts']['rowCount']['value'];
+      $served = abs($statistics['counts']['rowCount']['value']);
     }
     $statistics['counts']['totalServed'] = array(
       'title' => ts('Total Served'),
