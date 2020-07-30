@@ -517,57 +517,59 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
         //other age-related impairments
         //$hearingImpairment = $communicationImpairment = $diabetes = $cardiovascular = $cancer = $movementDisorders = $mobilityImpairment = $alzheimers = $cognitiveImpairment = $depression = $mentalHealthImpairment = $otherConcerns;
         if ($result['values'][0]['custom_175']) {
-          switch (TRUE) {
-            case in_array('Hearing Impairment', $result['values'][0]['custom_175']):
-              $hearingImpairment++;
-              break;
+          foreach ($result['values'][0]['custom_175'] as $otherImp) {
+            switch ($otherImp) {
+              case 'Hearing Impairment':
+                $hearingImpairment++;
+                break;
 
-            case in_array('Communication Impairment', $result['values'][0]['custom_175']):
-              $communicationImpairment++;
-              break;
+              case 'Communication Impairment':
+                $communicationImpairment++;
+                break;
 
-            case in_array('Diabetes', $result['values'][0]['custom_175']):
-              $diabetes++;
-              break;
+              case 'Diabetes':
+                $diabetes++;
+                break;
 
-            case in_array('Cardiovascular Disease & Strokes', $result['values'][0]['custom_175']):
-              $cardiovascular++;
-              break;
+              case 'Cardiovascular Disease & Strokes':
+                $cardiovascular++;
+                break;
 
-            case in_array('Cancer', $result['values'][0]['custom_175']):
-              $cancer++;
-              break;
+              case 'Cancer':
+                $cancer++;
+                break;
 
-            case in_array('Bone Muscle Skin Joint Movement Disorders', $result['values'][0]['custom_175']):
-              $movementDisorders++;
-              break;
+              case 'Bone Muscle Skin Joint Movement Disorders':
+                $movementDisorders++;
+                break;
 
-            case in_array('Mobility Impairment', $result['values'][0]['custom_175']):
-              $mobilityImpairment++;
-              break;
+              case 'Mobility Impairment':
+                $mobilityImpairment++;
+                break;
 
-            case in_array('Alzheimer\'s Disease or Cognitive Impairment', $result['values'][0]['custom_175']):
-              $alzheimers++;
-              break;
+              case 'Alzheimer\'s Disease or Cognitive Impairment':
+                $alzheimers++;
+                break;
 
-            case in_array('Cognitive or Intellectual Impairment', $result['values'][0]['custom_175']):
-              $cognitiveImpairment++;
-              break;
+              case 'Cognitive or Intellectual Impairment':
+                $cognitiveImpairment++;
+                break;
 
-            case in_array('Depression or Mood Disorders', $result['values'][0]['custom_175']):
-              $depression++;
-              break;
+              case 'Depression or Mood Disorders':
+                $depression++;
+                break;
 
-            case in_array('Mental Health Impairment', $result['values'][0]['custom_175']):
-              $mentalHealthImpairment++;
-              break;
+              case 'Mental Health Impairment':
+                $mentalHealthImpairment++;
+                break;
 
-            case in_array('Other Major Geriatric Concerns', $result['values'][0]['custom_175']):
-              $otherConcerns++;
-              break;
+              case 'Other Major Geriatric Concerns':
+                $otherConcerns++;
+                break;
 
-            default:
-              break;
+              default:
+                break;
+            }
           }
 
         }
