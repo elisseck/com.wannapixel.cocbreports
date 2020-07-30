@@ -1246,7 +1246,7 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
       'value' => $advocacyTraining,
     );
     $statistics['counts']['counseling'] = array(
-      'title' => ts('Counceling'),
+      'title' => ts('Counseling'),
       'value' => $counseling,
     );
     $statistics['counts']['communityIntegration'] = array(
