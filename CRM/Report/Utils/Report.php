@@ -285,17 +285,17 @@ WHERE  inst.report_id = %1";
       $csv .= implode($config->fieldSeparator,
           $displayRows
         ) . "\r\n";
-
-      //WannaPixel Customization - this is the only reason we are overriding this class in our extension
-      //Intention is to export Report Statistics to csv files
-      foreach ($form->statistics($rows)['counts'] as $statRow) {
-        if ($statRow['title']) {
-          //remove commas from the title, some have commas for COCB
-          $csv .= str_replace(',', '', $statRow['title']) . ',' . $statRow['value'] . "\r\n";
-        }
-      }
-      //end Customization
     }
+
+    //WannaPixel Customization - this is the only reason we are overriding this class in our extension
+    //Intention is to export Report Statistics to csv files
+    foreach ($form->statistics($rows)['counts'] as $statRow) {
+      if ($statRow['title']) {
+        //remove commas from the title, some have commas for COCB
+        $csv .= str_replace(',', '', $statRow['title']) . ',' . $statRow['value'] . "\r\n";
+      }
+    }
+    //end Customization
 
     return $csv;
   }
