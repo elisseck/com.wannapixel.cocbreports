@@ -5,6 +5,8 @@ require_once 'cocbreports.civix.php';
 use CRM_Cocbreports_ExtensionUtil as E;
 // phpcs:enable
 
+function cocbreports_civicrm_export( $exportTempTable, $headerRows, $sqlColumns, $exportMode, $componentTable, $ids ) {
+}
 /**
  * Implements hook_civicrm_config().
  *

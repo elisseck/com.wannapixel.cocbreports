@@ -251,8 +251,6 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
    */
   public function statistics(&$rows) {
     $statistics = parent::statistics($rows);
-    //make sure total matches the duplicates we took away
-    $statistics['counts']['rowsFound']['value'] -= $this->_dupes;
     $previousFy = $notPreviousFy = 0;
     //Set some totals to fill
     $age55to59 = $age60to64 = $age65to69 = $age70to74 = $age75to79 = $age80to84 = $age85to89 = $age90to94 = $age95to99 = $age100plus = $ageSubTotal = 0;
@@ -261,7 +259,7 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
     $totallyBlind = $legallyBlind = $severeVisualImpairment = $blindSubTotal = 0;
     $macularDegeneration = $diabeticRetinopathy = $glaucoma = $cataracts = $otherCause = $causeSubTotal = 0;
     $hearingImpairment = $communicationImpairment = $diabetes = $cardiovascular = $cancer = $movementDisorders = $mobilityImpairment = $alzheimers = $cognitiveImpairment = $depression = $mentalHealthImpairment = $otherConcerns = $otherImpairmentsSubTotal = 0;
-    $private = $seniorLiving = $assisted = $nursingHome = $homeless = $residenceSubTotal = 0;
+    $privateLiving = $seniorLiving = $assisted = $nursingHome = $homeless = $residenceSubTotal = 0;
     $eyeProvider = $physician = $state = $government = $veterans = $seniorCenter = $assistedLivingRef = $nursingHomeRef = $faithBased = $independentLiving = $familyMember = $selfRef = $otherRef = $referralSubTotal = 0;
 
     //case notes fields
@@ -579,7 +577,7 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
         if ($result['values'][0]['custom_165']) {
           switch ($result['values'][0]['custom_165']) {
             case 1:
-              $private++;
+              $privateLiving++;
               break;
 
             case 2:
@@ -607,8 +605,8 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
 
         //source of referral
         //$eyeProvider = $physician = $state = $government = $veterans = $seniorCenter = $assistedLivingRef = $nursingHomeRef = $faithBased = $independentLiving = $familyMember = $selfRef = $otherRef = $referralSubTotal = 0;
-        if ($result['values'][0]['custom_172']) {
-          switch ($result['values'][0]['custom_172']) {
+        if ($result['values'][0]['custom_183']) {
+          switch ($result['values'][0]['custom_183']) {
             case 1:
               $eyeProvider++;
               break;
@@ -909,7 +907,8 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
 
     //Get the Total Served
     if ($statistics['counts']['rowsFound']['value']) {
-      $served = abs($statistics['counts']['rowsFound']['value']);
+      $served = abs($statistics['counts']['rowsFound']['value'] - $this->_dupes);
+      $statistics['counts']['rowsFound']['value'] -= $this->_dupes;
     }
     else {
       $served = abs($statistics['counts']['rowCount']['value']);
@@ -1136,7 +1135,7 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
     //$private = $seniorLiving = $assisted = $nursingHome = $homeless = $residenceSubTotal = 0;
     $statistics['counts']['private'] = array(
       'title' => ts('Private Residence'),
-      'value' => $private,
+      'value' => $privateLiving,
     );
     $statistics['counts']['seniorLiving'] = array(
       'title' => ts('Senior Living/Retirement Community'),
