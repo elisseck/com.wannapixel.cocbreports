@@ -38,6 +38,14 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
             'required' => TRUE,
             'no_repeat' => TRUE,
           ),
+          '1' => array(
+            'dbAlias' => 1,
+            'title' => ts('Education Hours'),
+          ),
+          '2' => array(
+            'dbAlias' => 2,
+            'title' => ts('Counseling Hours'),
+          ),
           'first_name' => array(
             'title' => E::ts('First Name'),
             'no_repeat' => TRUE,
@@ -75,6 +83,7 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
           'postal_code' => NULL,
           'state_province_id' => array('title' => E::ts('State/Province')),
           'country_id' => array('title' => E::ts('Country')),
+          'county_id' => array('title' => E::ts('County')),
         ),
         'grouping' => 'contact-fields',
       ),
@@ -154,6 +163,8 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
 
     $this->_from = "
          FROM civicrm_contact {$this->_aliases['civicrm_contact']} {$this->_aclFrom}
+               LEFT JOIN civicrm_address {$this->_aliases['civicrm_address']}
+                          ON {$this->_aliases['civicrm_contact']}.id = {$this->_aliases['civicrm_address']}.contact_id
                LEFT JOIN civicrm_activity_contact
                           ON {$this->_aliases['civicrm_contact']}.id =
                              civicrm_activity_contact.contact_id
@@ -209,6 +220,32 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
       else {
         unset($rows[$rowNum]);
         $this->_dupes++;
+        continue;
+      }
+
+      //sum up hours
+        $startDate = explode(' )', explode('value_case_notes_fo_30_civireport.date_of_service_206 >= ', $this->_where)[1])[0];
+        $endDate = explode(' )', explode('value_case_notes_fo_30_civireport.date_of_service_206 <= ', $this->_where)[1])[0];
+        $allCaseNotes = civicrm_api3('Activity', 'get', [
+          'sequential' => 1,
+          'target_contact_id' => $row['civicrm_contact_id'],
+          'activity_type_id' => "Case Notes Form",
+          //only count DRCOG project here
+          'custom_209' => 1,
+          'custom_206' => ['BETWEEN' => [$startDate, $endDate]],
+        ]);
+        $educationHours = $counselingHours = 0;
+        foreach ($allCaseNotes['values'] as $case) {
+          $educationHours += $case['custom_212'];
+          $counselingHours += $case['custom_211'];
+        }
+      //education hours placeholder column
+      if (array_key_exists('civicrm_contact_1', $row)) {
+        $rows[$rowNum]['civicrm_contact_1'] = $educationHours;
+      }
+      //counseling hours placeholder column
+      if (array_key_exists('civicrm_contact_2', $row)) {
+        $rows[$rowNum]['civicrm_contact_2'] = $counselingHours;
       }
 
       if (array_key_exists('civicrm_address_state_province_id', $row)) {
@@ -221,6 +258,13 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
       if (array_key_exists('civicrm_address_country_id', $row)) {
         if ($value = $row['civicrm_address_country_id']) {
           $rows[$rowNum]['civicrm_address_country_id'] = CRM_Core_PseudoConstant::country($value, FALSE);
+        }
+        $entryFound = TRUE;
+      }
+
+      if (array_key_exists('civicrm_address_county_id', $row)) {
+        if ($value = $row['civicrm_address_county_id']) {
+          $rows[$rowNum]['civicrm_address_county_id'] = CRM_Core_PseudoConstant::county($value, FALSE);
         }
         $entryFound = TRUE;
       }
@@ -267,8 +311,8 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
 
     $rural = $frail = 0;
 
-    $AdamsEducation = $ArapahoeEducation = $BroomFieldEducation = $ClearCreekEducation = $DenverEducation = $DouglasEducation = $GilpinEducation = $JeffersionEducation = 0;
-    $AdamsCounseling = $ArapahoeCounseling = $BroomFieldCounseling = $ClearCreekCounseling = $DenverCounseling = $DouglasCounseling = $GilpinCounseling = $JeffersionCounseling = 0;
+    $AdamsEducation = $ArapahoeEducation = $BroomFieldEducation = $ClearCreekEducation = $DenverEducation = $DouglasEducation = $GilpinEducation = $JeffersonEducation = 0;
+    $AdamsCounseling = $ArapahoeCounseling = $BroomFieldCounseling = $ClearCreekCounseling = $DenverCounseling = $DouglasCounseling = $GilpinCounseling = $JeffersonCounseling = 0;
 
     //Get per-row addition totals
     foreach ($rows as $row) {
@@ -430,6 +474,7 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
           'sequential' => 1,
           'target_contact_id' => $row['civicrm_contact_id'],
           'activity_type_id' => "Case Notes Form",
+          'custom_209' => 1,
           'custom_206' => ['BETWEEN' => [$startDate, $endDate]],
         ]);
 
@@ -490,7 +535,7 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
 
           //we should have the address at this point, add case hours up
           if ($address['count'] > 0) {
-            switch($address['values'][0]['county']) {
+            switch($address['values'][0]['county_id']) {
               case 245:
                 $AdamsEducation += $case['custom_212'];
                 $AdamsCounseling += $case['custom_211'];
