@@ -145,7 +145,7 @@ class CRM_Cocbreports_Form_Report_OIBMonthly extends CRM_Report_Form {
   }
 
   public function preProcess() {
-    $this->assign('reportTitle', E::ts('OIB Annual Report'));
+    $this->assign('reportTitle', E::ts('OIB Monthly Report'));
     parent::preProcess();
   }
 
@@ -1011,8 +1011,8 @@ class CRM_Cocbreports_Form_Report_OIBMonthly extends CRM_Report_Form {
 
           if (in_array('Participant believes they now can live more independently due to services received', $closure['custom_221']) || in_array('Participant believes they can maintain their current living situation', $closure['custom_221'])) {
             $totalCaseClosuresWithImprovement++;
-          }
-        }*/
+          }*/
+        }
       }
     }
     //totals
