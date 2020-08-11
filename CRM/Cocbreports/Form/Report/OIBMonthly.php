@@ -273,6 +273,7 @@ class CRM_Cocbreports_Form_Report_OIBMonthly extends CRM_Report_Form {
           'sequential' => 1,
           'target_contact_id' => $row['civicrm_contact_id'],
           'activity_type_id' => "Case Notes Form",
+          'custom_209' => 2,
           'custom_206' => ['BETWEEN' => [$startDate, $endDate]],
         ]);
 
