@@ -253,9 +253,9 @@ class CRM_Cocbreports_Form_Report_OIBMonthly extends CRM_Report_Form {
     $statistics = parent::statistics($rows);
 
     //monthly totals
-    $monthlyServicesTotal = 0;
+    $monthlyServicesTotal = $monthlyServicesTotalUnduplicated = 0;
     $monthlyServicesTotalCount = 0;
-    $groupActivity = 0;
+    $groupActivity = $groupActivityUnduplicated = 0;
     $familyMember = 0;
     $totalHours = 0;
 
@@ -328,6 +328,14 @@ class CRM_Cocbreports_Form_Report_OIBMonthly extends CRM_Report_Form {
             $totalHours += $case['custom_210'];
           }
 
+        }
+
+        if ($monthlyServicesTotal > 0) {
+          $monthlyServicesTotalUnduplicated++;
+        }
+
+        if ($groupActivity > 0) {
+          $groupActivityUnduplicated++;
         }
 
         //count up the addresses
@@ -424,23 +432,23 @@ class CRM_Cocbreports_Form_Report_OIBMonthly extends CRM_Report_Form {
 
     $statistics['counts']['monthlyServicesTotal'] = array(
       'title' => ts('Number of consumers who received individual independent living services'),
-      'value' => $monthlyServicesTotal++,
+      'value' => $monthlyServicesTotalUnduplicated,
     );
     $statistics['counts']['monthlyServicesTotalCount'] = array(
       'title' => ts('Number of individual independent living services'),
-      'value' => $monthlyServicesTotalCount++,
+      'value' => $monthlyServicesTotalCount,
     );
     $statistics['counts']['groupActivity'] = array(
       'title' => ts('Number of consumers who participated in group activities'),
-      'value' => $groupActivity++,
+      'value' => $groupActivityUnduplicated,
     );
     $statistics['counts']['familyMember'] = array(
       'title' => ts('Number of families receiving services'),
-      'value' => $familyMember++,
+      'value' => $familyMember,
     );
     $statistics['counts']['totalHours'] = array(
       'title' => ts('Total Number of Client Contact Hours'),
-      'value' => $totalHours++,
+      'value' => $totalHours,
     );
 
     //add the counties to an array and iterate over them, adding statistics if there is a count
