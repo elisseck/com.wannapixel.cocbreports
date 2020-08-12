@@ -276,8 +276,10 @@ class CRM_Cocbreports_Form_Report_OIBMonthly extends CRM_Report_Form {
           'custom_209' => 2,
           'custom_206' => ['BETWEEN' => [$startDate, $endDate]],
         ]);
-
+//reset the row specific counts in-row
+        $groupActivity = $monthlyServicesTotal = 0;
         foreach ($allCaseNotes['values'] as $case) {
+
           //Monthly Report just counting total number of people with any service unduplicated
           if (count($case['custom_216']) > 0) {
             $monthlyServicesTotal++;
@@ -318,7 +320,6 @@ class CRM_Cocbreports_Form_Report_OIBMonthly extends CRM_Report_Form {
           if ($case['custom_214'] == 1 || $case['custom_214'] == 2 || $case['custom_214'] == 3 || $case['custom_214'] == 4 || $case['custom_214'] == 5) {
             $groupActivity++;
           }
-
           //family member present
           if ($case['custom_207'] == 1) {
             $familyMember++;
@@ -415,7 +416,6 @@ class CRM_Cocbreports_Form_Report_OIBMonthly extends CRM_Report_Form {
         }
       }
     }
-
 
     //Get the Total Served
     if ($statistics['counts']['rowsFound']['value']) {
