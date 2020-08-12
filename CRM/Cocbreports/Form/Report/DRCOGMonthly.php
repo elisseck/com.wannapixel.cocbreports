@@ -40,11 +40,11 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
           ),
           '1' => array(
             'dbAlias' => 1,
-            'title' => ts('Education Hours'),
+            'title' => ts('Education Units'),
           ),
           '2' => array(
             'dbAlias' => 2,
-            'title' => ts('Counseling Hours'),
+            'title' => ts('Counseling Units'),
           ),
           'first_name' => array(
             'title' => E::ts('First Name'),
@@ -379,12 +379,12 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
           //low income for white and minority
           $raceSubTotal++;
           if ($result['values'][0]['custom_159'] == 1) {
-            if ($result['values'][0] == 1 || $result['values'][0] == 2) {
+            if ($result['values'][0]['custom_200'] == 1 || $result['values'][0]['custom_200'] == 2) {
               $lowIncomeWhite++;
             }
           }
           else {
-            if ($result['values'][0] == 1 || $result['values'][0] == 2) {
+            if ($result['values'][0]['custom_200'] == 1 || $result['values'][0]['custom_200'] == 2) {
               $lowIncomeMinority++;
             }
           }
@@ -410,7 +410,7 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
           //if($addr['county_id'] == 249) { $Baca++;}
           //if($addr['county_id'] == 250) { $Bent++;}
           //if($addr['county_id'] == 251) { $Boulder++;}
-          //if($addr['county_id'] == 252) { $Broomfield++;}
+          if($addr['county_id'] == 252) { $Broomfield++;}
           //if($addr['county_id'] == 253) { $Chaffee++;}
           //if($addr['county_id'] == 254) { $Cheyenne++;}
           if($addr['county_id'] == 255) { $ClearCreek++;}
@@ -545,6 +545,10 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
                 $ArapahoeEducation += $case['custom_212'];
                 $ArapahoeCounseling += $case['custom_211'];
                 break;
+
+              case 252:
+                $BroomFieldEducation += $case['custom_212'];
+                $BroomFieldCounseling += $case['custom_211'];
 
               case 255:
                 $ClearCreekEducation += $case['custom_212'];
@@ -769,6 +773,14 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
     $statistics['counts']['ArapahoeCounseling'] = array(
       'title' => ts('Arapahoe Counseling Service Units Compensated'),
       'value' => $ArapahoeCounseling,
+    );
+    $statistics['counts']['BroomFieldEducation'] = array(
+      'title' => ts('Broomfield Education Service Units Compensated'),
+      'value' => $BroomFieldEducation,
+    );
+    $statistics['counts']['BroomFieldCounseling'] = array(
+      'title' => ts('Broomfield Counseling Service Units Compensated'),
+      'value' => $BroomFieldCounseling,
     );
     $statistics['counts']['ClearCreekEducation'] = array(
       'title' => ts('Clear Creek Education Service Units Compensated'),
