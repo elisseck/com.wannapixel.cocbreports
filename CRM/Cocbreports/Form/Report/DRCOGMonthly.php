@@ -378,16 +378,18 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
           }
           //low income for white and minority
           $raceSubTotal++;
-          if ($result['values'][0]['custom_159'] == 1) {
+          //if ($result['values'][0]['custom_159'] == 1) {
             if ($result['values'][0]['custom_200'] == 1 || $result['values'][0]['custom_200'] == 2) {
-              $lowIncomeWhite++;
+              $lowIncomeAll++;
             }
-          }
-          else {
+          //}
+          //else {
+          if ($result['values'][0]['custom_159'] != 1 && $result['values'][0]['custom_159'] != 8 && $result['values'][0]['custom_159'] != 9) {
             if ($result['values'][0]['custom_200'] == 1 || $result['values'][0]['custom_200'] == 2) {
               $lowIncomeMinority++;
             }
           }
+          //}
         }
         //rural
         if ($result['values'][0]['custom_162'] && $result['values'][0]['custom_162'] == 'Yes') {
@@ -642,9 +644,9 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
       'title' => ts('Refuse to Answer Race'),
       'value' => $refuseToAnswerRace,
     );
-    $statistics['counts']['lowIncomeWhite'] = array(
-      'title' => ts('Low Income White'),
-      'value' => $lowIncomeWhite,
+    $statistics['counts']['lowIncomeAll'] = array(
+      'title' => ts('Low Income'),
+      'value' => $lowIncomeAll,
     );
     $statistics['counts']['lowIncomeMinority'] = array(
       'title' => ts('Low Income Minority'),
