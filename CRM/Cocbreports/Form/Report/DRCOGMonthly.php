@@ -551,6 +551,7 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
               case 252:
                 $BroomFieldEducation += $case['custom_212'];
                 $BroomFieldCounseling += $case['custom_211'];
+                break;
 
               case 255:
                 $ClearCreekEducation += $case['custom_212'];
