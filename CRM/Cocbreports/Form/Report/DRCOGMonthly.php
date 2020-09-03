@@ -73,6 +73,14 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
             'no_repeat' => TRUE,
           ),
         ),
+        'order_bys' => array(
+          'sort_name' => array(
+            'title' => ts('Last Name, First Name'),
+            'default' => '1',
+            'default_weight' => '0',
+            'default_order' => 'ASC',
+          ),
+        ),
         'grouping' => 'contact-fields',
       ),
       'civicrm_address' => array(
@@ -100,6 +108,7 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
             'title' => ts('Activity Type'),
             'required' => TRUE,
             'type' => CRM_Utils_Type::T_STRING,
+            'no_display' => TRUE,
           ],
           'activity_subject' => [
             'title' => ts('Subject'),
@@ -113,6 +122,7 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
             'title' => ts('Activity Status'),
             'default' => TRUE,
             'type' => CRM_Utils_Type::T_STRING,
+            'no_display' => TRUE,
           ],
         ),
         'filters' => [
@@ -246,6 +256,16 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
       //counseling hours placeholder column
       if (array_key_exists('civicrm_contact_2', $row)) {
         $rows[$rowNum]['civicrm_contact_2'] = $counselingHours;
+      }
+
+      if (array_key_exists('civicrm_contact_gender_id', $row)) {
+        if ($value = $row['civicrm_contact_gender_id']) {
+          $labels = civicrm_api3('Contact', 'getoptions', [
+            'field' => "gender_id",
+          ]);
+          $rows[$rowNum]['civicrm_contact_gender_id'] = $labels['values'][$row['civicrm_contact_gender_id']];
+        }
+        $entryFound = TRUE;
       }
 
       if (array_key_exists('civicrm_address_state_province_id', $row)) {
