@@ -234,9 +234,11 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
       }
 
       //sum up hours
-        $startDate = explode(' )', explode('value_case_notes_fo_30_civireport.date_of_service_206 >= ', $this->_where)[1])[0];
-        $endDate = explode(' )', explode('value_case_notes_fo_30_civireport.date_of_service_206 <= ', $this->_where)[1])[0];
-        $allCaseNotes = civicrm_api3('Activity', 'get', [
+      $startDate = explode(')', explode('value_case_notes_fo_30_civireport.date_of_service_206 >= ', $this->_where)[1])[0];
+      $endDate = explode(')', explode('value_case_notes_fo_30_civireport.date_of_service_206 <= ', $this->_where)[1])[0];
+      $startDate = substr($startDate, 0, 8);
+      $endDate = substr($endDate, 0, 8);
+      $allCaseNotes = civicrm_api3('Activity', 'get', [
           'sequential' => 1,
           'target_contact_id' => $row['civicrm_contact_id'],
           'activity_type_id' => "Case Notes Form",
@@ -338,8 +340,8 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
     foreach ($rows as $row) {
       //subtotals for the top for last fiscal year and this fiscal year
       if ($row['civicrm_contact_id']) {
-        $startDate = explode(' )', explode('value_case_notes_fo_30_civireport.date_of_service_206 >= ', $this->_where)[1])[0];
-        $endDate = explode(' )', explode('value_case_notes_fo_30_civireport.date_of_service_206 <= ', $this->_where)[1])[0];
+        $startDate = explode(')', explode('value_case_notes_fo_30_civireport.date_of_service_206 >= ', $this->_where)[1])[0];
+        $endDate = explode(')', explode('value_case_notes_fo_30_civireport.date_of_service_206 <= ', $this->_where)[1])[0];
 
         //senior intake activity-based stats
         //get the senior intake activity, there should only be one of these
@@ -618,6 +620,7 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
     else {
       $served = abs($statistics['counts']['rowCount']['value']);
     }
+
     $statistics['counts']['totalServed'] = array(
       'title' => ts('Unduplicated Client Count'),
       'value' => $served,

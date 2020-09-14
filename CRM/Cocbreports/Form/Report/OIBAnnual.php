@@ -219,6 +219,7 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
       else {
         unset($rows[$rowNum]);
         $this->_dupes++;
+        continue;
       }
 
       if (array_key_exists('civicrm_address_state_province_id', $row)) {
@@ -295,8 +296,8 @@ class CRM_Cocbreports_Form_Report_OIBAnnual extends CRM_Report_Form {
     foreach ($rows as $row) {
       //subtotals for the top for last fiscal year and this fiscal year
       if ($row['civicrm_contact_id']) {
-        $startDate = explode(' )', explode('value_case_notes_fo_30_civireport.date_of_service_206 >= ', $this->_where)[1])[0];
-        $endDate = explode(' )', explode('value_case_notes_fo_30_civireport.date_of_service_206 <= ', $this->_where)[1])[0];
+        $startDate = explode(')', explode('value_case_notes_fo_30_civireport.date_of_service_206 >= ', $this->_where)[1])[0];
+        $endDate = explode(')', explode('value_case_notes_fo_30_civireport.date_of_service_206 <= ', $this->_where)[1])[0];
         $startDateMinusOneYear = date('Y-m-d', strtotime("-1 year", strtotime($startDate)));
         $endDateMinusOneYear = date('Y-m-d', strtotime("-1 year", strtotime($endDate)));
         $caseNotes = civicrm_api3('Activity', 'get', [
