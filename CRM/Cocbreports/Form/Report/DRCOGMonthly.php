@@ -331,7 +331,7 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
     $whiteNonHispanic = $hispanicLatino = $blackAfricanAmerican = $asian = $americanIndianAlaskanNative = $nativeHawaiian = $otherRace = $twoOrMoreRaces = $unknownRace = $refuseToAnswerRace = $raceSubTotal = 0;
     $lowIncomeWhite = $lowIncomeMinority = 0;
 
-    $rural = $frail = 0;
+    $rural = $frail = $frailUnduplicated = 0;
 
     $AdamsEducation = $ArapahoeEducation = $BroomFieldEducation = $ClearCreekEducation = $DenverEducation = $DouglasEducation = $GilpinEducation = $JeffersonEducation = 0;
     $AdamsCounseling = $ArapahoeCounseling = $BroomFieldCounseling = $ClearCreekCounseling = $DenverCounseling = $DouglasCounseling = $GilpinCounseling = $JeffersonCounseling = 0;
@@ -501,7 +501,7 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
           'custom_209' => 1,
           'custom_206' => ['BETWEEN' => [$startDate, $endDate]],
         ]);
-
+        $frail = 0;
         foreach ($allCaseNotes['values'] as $case) {
           //Monthly Report just counting total number of people with any service unduplicated
           if (count($case['custom_216']) > 0) {
@@ -607,7 +607,10 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
           }
 
         }
-
+        //unduplicated frail count
+        if ($frail > 0) {
+          $frailUnduplicated++;
+        }
       }
     }
 
@@ -679,7 +682,7 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
 
     $statistics['counts']['frail'] = array(
       'title' => ts('Frail'),
-      'value' => $frail,
+      'value' => $frailUnduplicated,
     );
     $statistics['counts']['rural'] = array(
       'title' => ts('Rural'),
