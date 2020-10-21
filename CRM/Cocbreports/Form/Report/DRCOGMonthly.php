@@ -336,6 +336,8 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
     $AdamsEducation = $ArapahoeEducation = $BroomFieldEducation = $ClearCreekEducation = $DenverEducation = $DouglasEducation = $GilpinEducation = $JeffersonEducation = 0;
     $AdamsCounseling = $ArapahoeCounseling = $BroomFieldCounseling = $ClearCreekCounseling = $DenverCounseling = $DouglasCounseling = $GilpinCounseling = $JeffersonCounseling = 0;
 
+    $totalCounselingHours = $totalEducationHours = 0;
+
     //Get per-row addition totals
     foreach ($rows as $row) {
       //subtotals for the top for last fiscal year and this fiscal year
@@ -556,6 +558,9 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
           if ($case['custom_208'] && $case['custom_208'] == 1) {
             $frail++;
           }
+
+          $totalCounselingHours += $case['custom_211'];
+          $totalEducationHours += $case['custom_212'];
 
           //we should have the address at this point, add case hours up
           if ($address['count'] > 0) {
@@ -852,6 +857,14 @@ class CRM_Cocbreports_Form_Report_DRCOGMonthly extends CRM_Report_Form {
       'value' => $JeffersonCounseling,
     );
 
+    $statistics['counts']['totalEducationHours'] = array(
+      'title' => ts('Total Education Hours'),
+      'value' => $totalEducationHours,
+    );
+    $statistics['counts']['totalCounselingHours'] = array(
+      'title' => ts('Total Counseling Hours'),
+      'value' => $totalCounselingHours,
+    );
     $statistics['counts']['totalServedMonth'] = array(
       'title' => ts('Total Consumers served for billing month'),
       'value' => $served,
